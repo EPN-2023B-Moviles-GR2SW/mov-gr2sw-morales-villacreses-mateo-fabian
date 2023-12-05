@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="saludo">Hola Mundo -> Condicion 3</string>
+    <color name="color_texto">#F1C40F</color>
+    <color name="color_fondo">#154360</color>
+</resources>

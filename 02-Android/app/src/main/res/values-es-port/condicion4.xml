@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="saludo">Adios Mundo -> Condicion 4</string>
+    <color name="color_texto">#7D3C98</color>
+    <color name="color_fondo">#F1C40F</color>
+</resources>

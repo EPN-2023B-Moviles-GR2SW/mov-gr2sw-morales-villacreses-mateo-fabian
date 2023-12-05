@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="saludo">Bye World -> Condicion 2</string>
+    <color name="color_texto">#1ABC9C</color>
+    <color name="color_fondo">#D35400</color>
+</resources>
