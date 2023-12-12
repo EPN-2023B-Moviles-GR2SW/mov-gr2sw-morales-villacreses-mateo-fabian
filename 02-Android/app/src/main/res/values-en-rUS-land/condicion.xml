@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="saludo">Hello World -> Condicion 1</string>
-    <color name="black">#FF000000</color>
     <color name="color_texto">#FF0000</color>
     <color name="color_fondo">#FFFFFF</color>
 </resources>
