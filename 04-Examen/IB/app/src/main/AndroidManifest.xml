@@ -13,6 +13,12 @@
         android:theme="@style/Theme.AppCompat.Light"
         tools:targetApi="31">
         <activity
+            android:name=".CrudCarros"
+            android:exported="false" />
+        <activity
+            android:name=".CrudConcesionario"
+            android:exported="false" />
+        <activity
             android:name=".ListViewCarros"
             android:exported="false" />
         <activity

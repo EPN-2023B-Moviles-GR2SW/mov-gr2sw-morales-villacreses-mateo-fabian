@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "940275097137",
+    "project_id": "examenib-concesionaria",
+    "storage_bucket": "examenib-concesionaria.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:940275097137:android:7475153ff0d6861bcc3f10",
+        "android_client_info": {
+          "package_name": "com.example.examenib"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHC4Dxdr_mhulSudEFjlzH3PmjJrzVlQY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

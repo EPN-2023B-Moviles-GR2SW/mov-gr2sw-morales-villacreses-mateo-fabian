@@ -1,17 +1,15 @@
 package com.example.examenib.models
 
-data class Concesionario(
-    val nombre: String,
-    val ubicacion: String,
-    val isOpen: Boolean,
-    val numeroEmpleados: Int,
-    val listaCarros: MutableList<Carro>
-) {
-    fun agregarCarro(carro: Carro){
-        listaCarros.add(carro)
-    }
+import java.util.ArrayList
 
+data class Concesionario(
+    var nombre: String,
+    var ubicacion: String,
+    var isOpen: Boolean,
+    var numeroEmpleados: Int,
+    val listaCarros: ArrayList<Carro>
+) {
     override fun toString(): String {
-        return "Nombre: ${nombre} - Ubicacion: ${ubicacion}"
+        return "Nombre: ${nombre.uppercase()} - Ubicacion: ${ubicacion.uppercase()} \nNo.Empleados: ${numeroEmpleados}"
     }
 }
