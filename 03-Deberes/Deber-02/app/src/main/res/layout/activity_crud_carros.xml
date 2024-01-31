@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CrudCarros">
+
+    <EditText
+        android:id="@+id/input_marca"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:ems="10"
+        android:hint="Ingresa la marca"
+        android:inputType="text"
+        app:layout_constraintBottom_toTopOf="@+id/input_modelo"
+        app:layout_constraintEnd_toEndOf="@+id/input_modelo"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/input_modelo" />
+
+    <EditText
+        android:id="@+id/input_modelo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:ems="10"
+        android:hint="Ingresar el modelo"
+        android:inputType="text"
+        app:layout_constraintBottom_toTopOf="@+id/input_year"
+        app:layout_constraintEnd_toEndOf="@+id/input_year"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/input_year" />
+
+    <EditText
+        android:id="@+id/input_year"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:ems="10"
+        android:hint="Ingrese el año"
+        android:inputType="text"
+        app:layout_constraintBottom_toTopOf="@+id/input_precio"
+        app:layout_constraintEnd_toEndOf="@+id/input_precio"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/input_precio" />
+
+    <EditText
+        android:id="@+id/input_precio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:ems="10"
+        android:hint="Ingrese el precio"
+        android:inputType="text"
+        app:layout_constraintBottom_toTopOf="@+id/input_estado"
+        app:layout_constraintEnd_toEndOf="@+id/input_estado"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/input_estado" />
+
+    <EditText
+        android:id="@+id/input_estado"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:ems="10"
+        android:hint="Ingrese Nuevo o Usado"
+        android:inputType="text"
+        app:layout_constraintBottom_toTopOf="@+id/btn_crearCarro"
+        app:layout_constraintEnd_toEndOf="@+id/btn_crearCarro"
+        app:layout_constraintHorizontal_bias="0.508"
+        app:layout_constraintStart_toStartOf="@+id/btn_crearCarro" />
+
+    <Button
+        android:id="@+id/btn_crearCarro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Crear"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_actualizarCarro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="Actualizar"
+        app:layout_constraintEnd_toEndOf="@+id/btn_crearCarro"
+        app:layout_constraintHorizontal_bias="0.55"
+        app:layout_constraintStart_toStartOf="@+id/btn_crearCarro"
+        app:layout_constraintTop_toBottomOf="@+id/btn_crearCarro" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
