@@ -1,9 +1,11 @@
 package com.example.examenib
 
 import android.app.Activity
+import android.content.ContentValues.TAG
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.ContextMenu
 import android.view.MenuItem
 import android.view.View
@@ -16,13 +18,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.example.examenib.models.Carro
 import com.example.examenib.models.Concesionario
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.firestore.FirebaseFirestore
 
 class ListViewCarros : AppCompatActivity() {
-    val arreglo = BaseDatosMemoria.arregloConcesionario
-    var posicionArreglo = 0
-    var posicionItemSeleccionado = 0
-    var listaCarro = arrayListOf<Carro>()
-    lateinit var adaptador: ArrayAdapter<Carro>
+
+    private val db = FirebaseFirestore.getInstance()
+    private val concesionarioCollection = db.collection("concesionarios")
+
+    private var nameF = ""
+    private var indexSelectedItem = 0
+    private var concesionarioPosition = -1
+    private var carrosList = arrayListOf<Carro>()
+    private lateinit var adaptador: ArrayAdapter<Carro>
 
     val callbackContenido =
         registerForActivityResult(
@@ -31,8 +38,7 @@ class ListViewCarros : AppCompatActivity() {
             if (result.resultCode === Activity.RESULT_OK) {
                 if (result.data != null) {
                     // logica negocio
-                    val data = result.data
-                    adaptador.notifyDataSetChanged()
+                    updateCarList()
                 }
             }
         }
@@ -41,42 +47,32 @@ class ListViewCarros : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_list_view_carros)
 
-        posicionArreglo = intent.getIntExtra("posicion", -1)
+        val concesionarioName = intent.getStringExtra("ConcesionarioName").toString()
+        nameF = intent.getStringExtra("nameF").toString()
+        concesionarioPosition = intent.getIntExtra("ConsecionarioPosition", -1)
 
         val txtConcesionario = findViewById<TextView>(R.id.txt_concesionario)
-        txtConcesionario.text = "Concesionario: ${arreglo[posicionArreglo].nombre}"
+        if (concesionarioName != null) {
+            txtConcesionario.text = "Concesionario: ${concesionarioName}"
+        }
 
-        listaCarro = arreglo[posicionArreglo].listaCarros
         val listView = findViewById<ListView>(R.id.lv_list_carros)
-        adaptador = ArrayAdapter(
-            this,
-            android.R.layout.simple_list_item_1,
-            listaCarro
-        )
-        listView.adapter = adaptador
-        adaptador.notifyDataSetChanged()
+        registerForContextMenu(listView)
 
         val botonAnadirListView = findViewById<Button>(R.id.btn_anadir_carro)
         botonAnadirListView.setOnClickListener {
-//            anadirCarro(adaptador)
-            posicionItemSeleccionado = -1
+            indexSelectedItem = -1
             abrirActividadConParametros(CrudCarros::class.java)
         }
 
-        registerForContextMenu(listView)
-    }
-
-    private fun anadirCarro(adaptador: ArrayAdapter<Carro>) {
-        listaCarro.add(
-            Carro(
-                "MARCA",
-                "MODELO",
-                2023,
-                20000.0,
-                "NUEVO"
-            )
+        adaptador = ArrayAdapter(
+            this,
+            android.R.layout.simple_list_item_1,
+            carrosList
         )
-        adaptador.notifyDataSetChanged()
+
+        listView.adapter = adaptador
+        updateCarList()
     }
 
     override fun onCreateContextMenu(
@@ -89,26 +85,39 @@ class ListViewCarros : AppCompatActivity() {
         inflater.inflate(R.menu.menucarros, menu)
         val info = menuInfo as AdapterView.AdapterContextMenuInfo
         val posicion = info.position
-        posicionItemSeleccionado = posicion
+        indexSelectedItem = posicion
     }
 
     override fun onContextItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.mi_editar_c -> {
-                //mostrarSnackbar("${posicionItemSeleccionado}")
-//                listaCarro[posicionItemSeleccionado].precio = 29999.99
-//                adaptador.notifyDataSetChanged()
                 abrirActividadConParametros(CrudCarros::class.java)
                 return true
             }
             R.id.mi_eliminar_c -> {
-                mostrarSnackbar("Carro eliminado")
-                listaCarro.removeAt(posicionItemSeleccionado)
+                val deletedCar = carrosList.removeAt(indexSelectedItem)
                 adaptador.notifyDataSetChanged()
+                deleteCarFromFirestore(deletedCar)
                 return true
             }
             else -> super.onContextItemSelected(item)
         }
+    }
+
+    private fun deleteCarFromFirestore(car: Carro){
+        concesionarioCollection.document(nameF)
+            .update("listaCarros", carrosList)
+            .addOnSuccessListener {
+                mostrarSnackbar("Carro eliminado con exito")
+                adaptador.clear()
+                adaptador.addAll(carrosList)
+                adaptador.notifyDataSetChanged()
+            }
+            .addOnFailureListener { e ->
+                mostrarSnackbar("Error al eliminar el carro")
+                carrosList.add(indexSelectedItem, car)
+                adaptador.notifyDataSetChanged()
+            }
     }
 
     private fun mostrarSnackbar(texto: String) {
@@ -119,9 +128,34 @@ class ListViewCarros : AppCompatActivity() {
 
     private fun abrirActividadConParametros(clase: Class<*>) {
         val intentExplicito = Intent(this, clase)
-        intentExplicito.putExtra("posicion", posicionItemSeleccionado)
-        intentExplicito.putExtra("posicionArreglo", posicionArreglo)
+        intentExplicito.putExtra("position", indexSelectedItem)
+        intentExplicito.putExtra("concesionarioPosition", concesionarioPosition)
+        intentExplicito.putExtra("nameF", nameF)
+        if (indexSelectedItem != -1){
+            val selectedCar = carrosList[indexSelectedItem]
+            intentExplicito.putExtra("carMarca", selectedCar.marca)
+            intentExplicito.putExtra("carModelo", selectedCar.modelo)
+            intentExplicito.putExtra("carYear", selectedCar.year)
+            intentExplicito.putExtra("carPrecio", selectedCar.precio)
+            intentExplicito.putExtra("carEstado", selectedCar.estado)
+            intentExplicito.putExtra("editar", 0)
+        }
 
         callbackContenido.launch(intentExplicito)
+    }
+
+    private fun updateCarList() {
+        concesionarioCollection.document(nameF).get()
+            .addOnSuccessListener { documentSnapshot ->
+                val concesionario = documentSnapshot.toObject(Concesionario::class.java)
+                if (concesionario != null) {
+                    carrosList = (concesionario.listaCarros as ArrayList<Carro>?)!!
+                    adaptador.clear()
+                    adaptador.addAll(carrosList)
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Error al obtener lista carros", e)
+            }
     }
 }

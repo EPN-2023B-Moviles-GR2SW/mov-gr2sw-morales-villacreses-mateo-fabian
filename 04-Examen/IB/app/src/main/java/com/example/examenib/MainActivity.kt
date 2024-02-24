@@ -1,9 +1,11 @@
 package com.example.examenib
 
 import android.app.Activity
+import android.content.ContentValues.TAG
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.ContextMenu
 import android.view.MenuItem
 import android.view.View
@@ -15,12 +17,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.example.examenib.models.Carro
 import com.example.examenib.models.Concesionario
 import com.google.android.material.snackbar.Snackbar
-import java.util.ArrayList
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
 
-    val arreglo = BaseDatosMemoria.arregloConcesionario
-    var posicionItemSeleccionado = 0
+    private val db = FirebaseFirestore.getInstance()
+    private val concesionariosCollection = db.collection("concesionarios")
+    private val documentNames = ArrayList<String>()
+
+    private var indexSelectedItem = 0
+    private var concesionarioList = ArrayList<Concesionario>()
     lateinit var adaptador: ArrayAdapter<Concesionario>
 
     val callbackContenido =
@@ -31,7 +38,10 @@ class MainActivity : AppCompatActivity() {
                 if (result.data != null) {
                     // logica negocio
                     val data = result.data
-                    adaptador.notifyDataSetChanged()
+                    val position = data?.getIntExtra("position", -1)
+                    if (position != null && position != -1) {
+                        adaptador.notifyDataSetChanged()
+                    }
                 }
             }
         }
@@ -44,34 +54,59 @@ class MainActivity : AppCompatActivity() {
         adaptador = ArrayAdapter(
             this,
             android.R.layout.simple_list_item_1,
-            arreglo
+            concesionarioList
         )
         listView.adapter = adaptador
         adaptador.notifyDataSetChanged()
 
+        loadConcesionarios()
+
+        concesionariosCollection.get()
+            .addOnSuccessListener { querySnapshot ->
+                for (document in querySnapshot.documents) {
+                    val documentId = document.id
+                    documentNames.add(documentId)
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w(TAG, "Error al obtener los documentos", exception)
+            }
+
+        listView.setOnItemClickListener { parent, view, position, id ->
+            val selectedConcesionario = concesionarioList[position]
+            val explicitIntent = Intent(this, ListViewCarros::class.java)
+            explicitIntent.putExtra("ConcesionarioName", selectedConcesionario.nombre)
+            explicitIntent.putExtra("nameF", documentNames[indexSelectedItem])
+            callbackContenido.launch(explicitIntent)
+        }
+
         val botonAnadirListView = findViewById<Button>(R.id.btn_anadir_concesionario)
         botonAnadirListView.setOnClickListener {
-            //anadirConcesionario(adaptador)
-            posicionItemSeleccionado = -1
+            indexSelectedItem = -1
             abrirActividadConParametros(CrudConcesionario::class.java)
-//            adaptador.notifyDataSetChanged()
         }
 
         registerForContextMenu(listView)
     }
 
-    private fun anadirConcesionario(adaptador: ArrayAdapter<Concesionario>) {
-        val listaCarros: ArrayList<Carro> = arrayListOf()
-        arreglo.add(
-            Concesionario(
-                "HONDA",
-                "LOJA",
-                true,
-                20,
-                listaCarros
-            )
-        )
-        adaptador.notifyDataSetChanged()
+    override fun onResume() {
+        super.onResume()
+        loadConcesionarios()
+    }
+
+    private fun loadConcesionarios() {
+        concesionariosCollection.get()
+            .addOnSuccessListener { result ->
+                concesionarioList.clear()
+                for (document in result) {
+                    val concesionario = document.toObject(Concesionario::class.java)
+                    concesionarioList.add(concesionario)
+                }
+                adaptador.notifyDataSetChanged()
+            }
+            .addOnFailureListener { exception ->
+                Log.w(TAG, "Error al obtener los documentos", exception)
+            }
     }
 
     override fun onCreateContextMenu(
@@ -84,33 +119,50 @@ class MainActivity : AppCompatActivity() {
         inflater.inflate(R.menu.menuconcesionario, menu)
         val info = menuInfo as AdapterView.AdapterContextMenuInfo
         val posicion = info.position
-        posicionItemSeleccionado = posicion
+        indexSelectedItem = posicion
     }
 
     override fun onContextItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.mi_editar_c -> {
-//                mostrarSnackbar("${posicionItemSeleccionado}")
                 abrirActividadConParametros(CrudConcesionario::class.java)
                 return true
             }
 
             R.id.mi_eliminar_c -> {
-                mostrarSnackbar("Concesionario ${arreglo[posicionItemSeleccionado].nombre} eliminado")
-                // Eliminar completamente
-                arreglo.removeAt(posicionItemSeleccionado)
-                //arreglo[posicionItemSeleccionado].isOpen = false
-                adaptador.notifyDataSetChanged()
+                val deletedConcesionario = concesionarioList[indexSelectedItem]
+                deletedConcesionarioFromFirestore(deletedConcesionario)
                 return true
             }
 
             R.id.mi_carros -> {
-                //irActividad(ListViewCarros::class.java)
                 abrirActividadConParametros(ListViewCarros::class.java)
                 return true
             }
 
             else -> super.onContextItemSelected(item)
+        }
+    }
+
+    private fun deletedConcesionarioFromFirestore(concesionario: Concesionario) {
+        if (concesionario.nombre != null) {
+            concesionariosCollection.document(documentNames[indexSelectedItem])
+                .delete()
+                .addOnSuccessListener {
+                    concesionarioList.remove(concesionario)
+                    adaptador.notifyDataSetChanged()
+                    mostrarSnackbar("Concesionario eliminado correctamente")
+                    if (indexSelectedItem >= concesionarioList.size) {
+                        indexSelectedItem = concesionarioList.size - 1
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Error al eliminar el distribuidor", e)
+                    mostrarSnackbar("No se pudo eliminar el concesionario")
+                }
+        } else {
+            Log.e(TAG, "No existe concesionario")
+            mostrarSnackbar("No existe concesionario")
         }
     }
 
@@ -124,7 +176,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun abrirActividadConParametros(clase: Class<*>) {
         val intentExplicito = Intent(this, clase)
-        intentExplicito.putExtra("posicion", posicionItemSeleccionado)
+        intentExplicito.putExtra("posicion", indexSelectedItem)
+        if (indexSelectedItem != -1) {
+            val selectedConcesionario = concesionarioList[indexSelectedItem]
+            intentExplicito.putExtra("concesionarioNombre", selectedConcesionario.nombre)
+            intentExplicito.putExtra("concesionarioUbicacion", selectedConcesionario.ubicacion)
+            intentExplicito.putExtra("concesionarioEstado", selectedConcesionario.isOpen)
+            intentExplicito.putExtra(
+                "concesionarioEmpleados",
+                selectedConcesionario.numeroEmpleados
+            )
+            intentExplicito.putExtra("nameF", documentNames[indexSelectedItem])
+        }
 
         callbackContenido.launch(intentExplicito)
     }
