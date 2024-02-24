@@ -41,6 +41,10 @@ class IFirestore : AppCompatActivity() {
         val botonOrderBy = findViewById<Button>(R.id.btn_fs_order_by)
         botonOrderBy.setOnClickListener { consultarConOrderBy(adaptador) }
 
+        // Obtener documento
+        val botonObtenerDocumento = findViewById<Button>(R.id.btn_fs_odoc)
+        botonObtenerDocumento.setOnClickListener { consultarDocumento(adaptador) }
+
         // Crear datos
         val botonCrear = findViewById<Button>(R.id.btn_fs_crear)
         botonCrear.setOnClickListener { crearEjemplo() }
@@ -179,6 +183,38 @@ class IFirestore : AppCompatActivity() {
             .addOnFailureListener { }
     }
 
+    private fun consultarDocumento(
+        adaptador: ArrayAdapter<ICities>
+    ) {
+        val db = Firebase.firestore
+        val citiesRefUnico = db.collection("cities")
+        limpiarArreglo()
+        adaptador.notifyDataSetChanged()
+
+        citiesRefUnico
+            .document("BJ")
+            .get() // obtener 1 DOCUMENTO
+            .addOnSuccessListener {
+                // it=> ES UN OBJETO!
+                arreglo
+                    .add(
+                        ICities(
+                            it.data?.get("name") as String?,
+                            it.data?.get("state") as String?,
+                            it.data?.get("country") as String?,
+                            it.data?.get("capital") as Boolean?,
+                            it.data?.get("population") as Long?,
+                            it.data?.get("regions") as
+                                    ArrayList<String>?,
+                        )
+                    )
+                adaptador.notifyDataSetChanged()
+            }
+            .addOnFailureListener {
+                // salio Mal
+            }
+    }
+
     private fun consultarConOrderBy(adaptador: ArrayAdapter<ICities>) {
         val db = Firebase.firestore
         val citiesRefUnico = db.collection("cities")
@@ -212,7 +248,7 @@ class IFirestore : AppCompatActivity() {
             ciudad.data.get("name") as String?,
             ciudad.data.get("state") as String?,
             ciudad.data.get("country") as String?,
-            ciudad.data.get("capital") as String?,
+            ciudad.data.get("capital") as Boolean?,
             ciudad.data.get("population") as Long?,
             ciudad.data.get("regions") as ArrayList<String>?,
         )
